@@ -30,23 +30,35 @@ def filter_x_name(x_array, x_name, tf_idf_minin_value):
 	#x_array_sum is one dimension
 	for one_array in x_array:
 		for index in range(len(one_array)):	
-			x_array_sum[ index ] += one_array[index]
+			x_array_sum[ index ] += int(one_array[index])
 	#start filter 
 	myDict = {}
 	for i in range(len(x_array_sum)):
-		if x_array_sum[i] < tf_idf_minin_value:
+		if x_array_sum[i] <= tf_idf_minin_value:
 			myDict[i] = i
-	row_array = len(x_array)
-	print "x_array:row is "+str(row_array)+"; col is "+str(col_array)
+	print "x_array:row is "+str(len(x_array))+"; col is "+str(col_array)
 	print "x_name:len is "+str(len(x_name))
+	#filter xname
 	for i in range(len(x_name)-1, -1, -1):
 		if i in myDict:
 			x_name.pop(i)
-	row_array = len(x_array)
-	col_array = 0
-	print "new x_name:len is "+str(len(x_name))
+	#filter xarray
+	new_x_array = []
+	col_new_array = 0
+	for one_array in x_array:
+		col_new_array = 0
+		for i in range(len(one_array) - 1, -1, -1):
+			if i in myDict:
+				one_array.pop(i)
+			else:
+				col_new_array += 1
+		for i in range(len(one_array)):
+			one_array[i] = int(one_array[i])
+		new_x_array.append(one_array)
+	print "new_x_array:row is "+str(len(new_x_array))+"; col is "+str(col_new_array)
+	print "new_x_name:len is "+str(len(x_name))
 	print 'ok...\n'
-	return x_name
+	return new_x_array, x_name
 
 
 '''
@@ -55,7 +67,7 @@ get the vocab
 def get_array(file_path):
 	print ('start get array from corpus...')
 	vectorizer = CountVectorizer()
-	transformer = TfidfTransformer()
+	#transformer = TfidfTransformer()
 	fopen = codecs.open(file_path, 'r')
 	corpus = []
 	for line in codecs.open(file_path, 'r'):
@@ -65,11 +77,12 @@ def get_array(file_path):
 	#print corpus
 	fopen.close()
 	x1 = vectorizer.fit_transform(corpus)
-	tfidf = transformer.fit_transform(x1)
-	weight = tfidf.toarray()
+	#tfidf = transformer.fit_transform(x1)
+	#weight = tfidf.toarray()
 	x_array = x1.toarray()
 	x_name = vectorizer.get_feature_names()
-	print "x_name's len = ", len(x_name)
+	print "x_name len = ", len(x_name)
+	print 'x_array len = ', len(x_array)
 	print 'ok...\n'
 	return x_array, x_name
 
@@ -81,31 +94,36 @@ para: file_path is the x_array(that is tf-idf)'s file
 return: the topics 
 			one row is one doc and one col is one P 
 '''
-def lda_solve(file_path, show_topic_word_num = 1, n_topics=5, random_state=0, n_iter=50):
+def lda_solve(file_path, filter_file_path, show_topic_word_num = 1, n_topics=20, random_state=1, n_iter=500):
 	print ("\nstart get the topics...")
-	fopenr = open(file_path, 'r')
-	X = []
-	index = 1
-	for line in open(file_path, 'r'):
-		index += 1
-		line = fopenr.readline()
-		if line == "":
-			continue
-		line = line.strip().split(' ')
-		cnt = 0
-		for w in line:
-			line[cnt] = int(w)
-			cnt += 1
-		X.append(line)
-	fopenr.close()
+	# fopenr = open(file_path, 'r')
+	# X = []
+	# index = 1
+	# for line in open(file_path, 'r'):
+	# 	index += 1
+	# 	line = fopenr.readline()
+	# 	if line == "":
+	# 		continue
+	# 	line = line.strip().split(' ')
+	# 	cnt = 0
+	# 	for w in line:
+	# 		line[cnt] = int(w)
+	# 		cnt += 1
+	# 	X.append(line)
+	# fopenr.close()
+
+	X, temp_vocab = get_array(filter_file_path)
+	X, temp_vocab = filter_x_name(X, temp_vocab, 5)
+
 	X = numpy.array(X)
-	model = lda.LDA(n_topics = n_topics, random_state = random_state, n_iter = n_iter)
+	model = lda.LDA(n_topics=n_topics, random_state=random_state, n_iter=n_iter)
 	model.fit(X)
 	print ("ok...\n")
-	tempX, temp_vocab = get_array('localfile/wordallfilterhtmlcontent.txt')
-	temp_vocab = filter_x_name(tempX, temp_vocab, 5)
+	#tempX, temp_vocab = get_array(filter_file_path)
+	#temp_vocab = filter_x_name(tempX, temp_vocab, 5)
 	#print vocab
 	vocab = tuple(temp_vocab)
+	print 'vocab len = ', len(vocab)
 	topic_word = model.topic_word_
 	topic_word_score = []
 	for i, topic_dist in enumerate(topic_word):
@@ -179,6 +197,7 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 
 if __name__ == "__main__":
 	file1 = 'localfile/x_array.txt'
+	filter_file_path = 'localfile/wordallfilterhtmlcontent.txt'
 	show_topic_word_num = 3
 	n_topics = 20
 	random_state = 1
@@ -186,17 +205,21 @@ if __name__ == "__main__":
 	if len(sys.argv) >= 2:
 		file1 = sys.argv[1]
 		if len(sys.argv) >= 3:
-			show_topic_word_num = int(sys.argv[2])
-		if len(sys.argv) >= 4:
-			n_topics = int(sys.argv[3])
-		if len(sys.argv) >= 5:
-			random_state = int(sys.argv[4])
-		if len(sys.argv) >= 6:
-			n_iter = int(sys.argv[5])
-		doc_topic, topic_word, vocab = lda_solve(file1, show_topic_word_num = show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
-		#write_local_file(doc_topic, 'localfile/doc_topic.csv')
-		#write_local_file(topic_word, 'localfile/topic_word.csv')
-		#write_doc_score_to_localfile(topic_word,vocab, 'localfile/topic_word_score.csv')
+			filter_file_path = sys.argv[2]
+			if len(sys.argv) >= 4:
+				show_topic_word_num = int(sys.argv[3])
+			if len(sys.argv) >= 5:
+				n_topics = int(sys.argv[4])
+			if len(sys.argv) >= 6:
+				random_state = int(sys.argv[5])
+			if len(sys.argv) >= 7:
+				n_iter = int(sys.argv[6])
+			doc_topic, topic_word, vocab = lda_solve(file1, filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
+			#write_local_file(doc_topic, 'localfile/doc_topic.csv')
+			#write_local_file(topic_word, 'localfile/topic_word.csv')
+			#write_doc_score_to_localfile(topic_word,vocab, 'localfile/topic_word_score.csv')
+		else:
+			print '[ERROR] check the file & value_list'	
 	else:
-		print '[ERROR] check the file & value'
+		print '[ERROR] check the file & value_list'
 	print 'finish...'

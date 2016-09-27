@@ -60,7 +60,7 @@ def filter_x_array(x_array, tf_idf_minin_value):
 	#x_array_sum is one dimension
 	for one_array in x_array:
 		for index in range(len(one_array)):	
-			x_array_sum[ index ] += one_array[index]
+			x_array_sum[ index ] += int(one_array[index])
 	#start filter 
 	myDict = {}
 	for i in range(len(x_array_sum)):
