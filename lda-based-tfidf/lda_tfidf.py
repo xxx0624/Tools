@@ -94,23 +94,8 @@ para: file_path is the x_array(that is tf-idf)'s file
 return: the topics 
 			one row is one doc and one col is one P 
 '''
-def lda_solve(file_path, filter_file_path, show_topic_word_num = 1, n_topics=20, random_state=1, n_iter=500):
+def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_state=1, n_iter=500):
 	print ("\nstart get the topics...")
-	# fopenr = open(file_path, 'r')
-	# X = []
-	# index = 1
-	# for line in open(file_path, 'r'):
-	# 	index += 1
-	# 	line = fopenr.readline()
-	# 	if line == "":
-	# 		continue
-	# 	line = line.strip().split(' ')
-	# 	cnt = 0
-	# 	for w in line:
-	# 		line[cnt] = int(w)
-	# 		cnt += 1
-	# 	X.append(line)
-	# fopenr.close()
 
 	X, temp_vocab = get_array(filter_file_path)
 	X, temp_vocab = filter_x_name(X, temp_vocab, 5)
@@ -196,30 +181,25 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 
 
 if __name__ == "__main__":
-	file1 = 'localfile/x_array.txt'
 	filter_file_path = 'localfile/wordallfilterhtmlcontent.txt'
 	show_topic_word_num = 3
 	n_topics = 20
 	random_state = 1
 	n_iter = 500
 	if len(sys.argv) >= 2:
-		file1 = sys.argv[1]
+		filter_file_path = sys.argv[1]
 		if len(sys.argv) >= 3:
-			filter_file_path = sys.argv[2]
-			if len(sys.argv) >= 4:
-				show_topic_word_num = int(sys.argv[3])
-			if len(sys.argv) >= 5:
-				n_topics = int(sys.argv[4])
-			if len(sys.argv) >= 6:
-				random_state = int(sys.argv[5])
-			if len(sys.argv) >= 7:
-				n_iter = int(sys.argv[6])
-			doc_topic, topic_word, vocab = lda_solve(file1, filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
-			#write_local_file(doc_topic, 'localfile/doc_topic.csv')
-			#write_local_file(topic_word, 'localfile/topic_word.csv')
-			#write_doc_score_to_localfile(topic_word,vocab, 'localfile/topic_word_score.csv')
-		else:
-			print '[ERROR] check the file & value_list'	
+			show_topic_word_num = int(sys.argv[2])
+		if len(sys.argv) >= 4:
+			n_topics = int(sys.argv[3])
+		if len(sys.argv) >= 5:
+			random_state = int(sys.argv[4])
+		if len(sys.argv) >= 6:
+			n_iter = int(sys.argv[5])
+		doc_topic, topic_word, vocab = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
+		#write_local_file(doc_topic, 'localfile/doc_topic.csv')
+		#write_local_file(topic_word, 'localfile/topic_word.csv')
+		#write_doc_score_to_localfile(topic_word,vocab, 'localfile/topic_word_score.csv')
 	else:
 		print '[ERROR] check the file & value_list'
 	print 'finish...'
