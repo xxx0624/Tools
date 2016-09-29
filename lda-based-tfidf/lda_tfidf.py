@@ -129,7 +129,7 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 write two dimesion into local file
 '''
 def write_local_file(arr, new_file_path):
-	print ("\nstart write "+str(new_file_path)+" into local...")
+	print ("====== start write "+str(new_file_path)+" into localfile ======")
 	if os.path.exists(new_file_path) == False:
 		print("dont find the file...\nstart create the file...")
 		f = open(new_file_path, 'w')
@@ -138,15 +138,22 @@ def write_local_file(arr, new_file_path):
 	fopenw = open(new_file_path, 'w')
 	for x in arr:
 		temp = ""
+		index = 1
+		max_value_index = -1
+		max_value = -1.0
 		for y in x:
+			if max_value < float(y):
+				max_value = float(y)
+				max_value_index = index
 			if temp == "":
 				temp = str(y)
 			else:
 				temp = temp + "," + str(y)
-		fopenw.write(temp)
+			index += 1
+		fopenw.write(str(max_value_index) + ',' + temp)
 		fopenw.write('\n')
 	fopenw.close()
-	print ("ok...\n")
+	print ("====== ok ======\n")
 
 
 '''
@@ -176,7 +183,7 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 				fopenw.write(',')
 				fopenw.write(str(s))
 		fopenw.write('\n')
-	print "====== ok ========="
+	print "====== ok ======\n"
 	fopenw.close()
 
 
