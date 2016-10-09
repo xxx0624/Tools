@@ -5,10 +5,12 @@ import lda
 import lda.datasets
 import codecs
 import sys, os
+import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 
 '''
 filter some not important words(the idf's value is small)
@@ -116,10 +118,12 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 		topic_words_score = topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
 		print ('topic {0}:{1}'.format(i, u' '.join(topic_words).encode('utf-8')))
 		print ('topic score:'+str(topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]))
-	print "=====mode.doc_topic_====="
+	print "===== mode.doc_topic_ ====="
+	print len(model.doc_topic_), len(model.doc_topic_[0])
 	print model.doc_topic_
 	print "============\n"
-	print "=====model.topic_word_====="
+	print "===== model.topic_word_ ====="
+	print len(topic_word), len(topic_word[0])
 	print topic_word
 	print "============"
 	return model.doc_topic_, model.topic_word_, vocab
@@ -156,6 +160,52 @@ def write_local_file(arr, new_file_path):
 	print ("====== ok ======\n")
 
 
+def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, sentences_file_path='localfile/allhtmlcontent.txt', file_path='localfile/finalResult.txt'):
+	print "====== start write file ======"
+
+	print type(doc_topic), type(topic_word)
+	print type(vocab), len(vocab)
+
+	doc_word = np.dot(np.matrix(doc_topic), np.matrix(topic_word))
+
+	#doc_word = numpy.array(doc_word).reshape(-1,).tolist()
+
+	sentences = []
+	fr = open(sentences_file_path, 'rb')
+	for line in fr:
+		if line.strip() == "":
+			continue
+		sentences.append(line.strip())
+	fr.close()
+
+	fw = open(file_path, 'w')
+	sentence_id = 0
+	for sentence_id in range(len(doc_word)):
+		word_list = numpy.array(doc_word)[sentence_id].tolist()
+		words = {}
+		for i in range(len(word_list)):
+			words[i] = word_list[i]
+		words = sorted(words.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+		#print type(words)
+		fw.write(sentences[sentence_id] + "\n")
+		sentence_id += 1
+		for i in range(show_topic_word_num):
+			fw.write(vocab[int(words[i][0])] + " ")
+		fw.write("\n")
+		for i in range(show_topic_word_num):
+			fw.write(str(words[i][1]) + " ")
+		fw.write("\n\n")
+	fw.close()
+
+	print 'sentences: rows = ', len(sentences)
+	
+	print "====== ok ======"
+
+#todo
+def likelihood_best():
+	pass
+
+
 '''
 '''
 def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
@@ -189,24 +239,16 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 
 if __name__ == "__main__":
 	filter_file_path = 'localfile/wordallfilterhtmlcontent.txt'
-	show_topic_word_num = 3
+	show_topic_word_num = 5
 	n_topics = 20
 	random_state = 1
 	n_iter = 500
-	if len(sys.argv) >= 2:
-		filter_file_path = sys.argv[1]
-		if len(sys.argv) >= 3:
-			show_topic_word_num = int(sys.argv[2])
-		if len(sys.argv) >= 4:
-			n_topics = int(sys.argv[3])
-		if len(sys.argv) >= 5:
-			random_state = int(sys.argv[4])
-		if len(sys.argv) >= 6:
-			n_iter = int(sys.argv[5])
-		doc_topic, topic_word, vocab = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
-		#write_local_file(doc_topic, 'localfile/doc_topic.csv')
-		#write_local_file(topic_word, 'localfile/topic_word.csv')
-		#write_doc_score_to_localfile(topic_word,vocab, 'localfile/topic_word_score.csv')
-	else:
-		print '[ERROR] check the file & value_list'
+
+	doc_topic, topic_word, vocab = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
+	#write_local_file(doc_topic, 'localfile/doc_topic.csv')
+	#write_local_file(topic_word, 'localfile/topic_word.csv')
+	#write_doc_score_to_localfile(topic_word, vocab, 'localfile/topic_word_score.csv')
+	write_local_file(doc_topic, topic_word, vocab, show_topic_word_num,
+					 file_path="localfile/finalResult"+str(n_topics)+"_"+str(random_state)+"_"+str(n_iter)+"_"+str(show_topic_word_num)+".txt" )
+
 	print 'finish...'

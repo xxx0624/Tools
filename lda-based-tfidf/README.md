@@ -23,9 +23,9 @@
     eg:python tf-idf.py localfile/wordallfilterhtmlcontent.txt localfile/x_array.txt 5
 
 4. LDA<br>
-    python lda-based-tfidf.py filter_file_path show_topic_word_num n_topics random_state n_iter<br>
+    python lda-based-tfidf.py (argv[] in main)<br>
     filter_file_path：同2中的file4(required)<br>
     show_topic_word_num：console中的展示结果，每个topic的word数目<br>
     n_topics random_state n_iter分别是lda参数<br>
 
-    eg:python lda_tfidf.py localfile/wordallfilterhtmlcontent.txt 3 20 1 500<br>
+    eg:python lda_tfidf.py <br>
