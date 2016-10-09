@@ -105,19 +105,19 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 	X = numpy.array(X)
 	model = lda.LDA(n_topics=n_topics, random_state=random_state, n_iter=n_iter)
 	model.fit(X)
-	print ("ok...\n")
+
 	#tempX, temp_vocab = get_array(filter_file_path)
 	#temp_vocab = filter_x_name(tempX, temp_vocab, 5)
 	#print vocab
 	vocab = tuple(temp_vocab)
-	print 'vocab len = ', len(vocab)
 	topic_word = model.topic_word_
 	topic_word_score = []
 	for i, topic_dist in enumerate(topic_word):
 		topic_words = numpy.array(vocab)[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
 		topic_words_score = topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
-		print ('topic {0}:{1}'.format(i, u' '.join(topic_words).encode('utf-8')))
-		print ('topic score:'+str(topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]))
+		#print ('topic {0}:{1}'.format(i, u' '.join(topic_words).encode('utf-8')))
+		#print ('topic score:'+str(topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]))
+	'''
 	print "===== mode.doc_topic_ ====="
 	print len(model.doc_topic_), len(model.doc_topic_[0])
 	print model.doc_topic_
@@ -126,7 +126,9 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 	print len(topic_word), len(topic_word[0])
 	print topic_word
 	print "============"
-	return model.doc_topic_, model.topic_word_, vocab
+	'''
+	print ("ok...\n")
+	return model.doc_topic_, model.topic_word_, vocab, model.loglikelihoods_
 
 
 '''
@@ -160,15 +162,10 @@ def write_local_file(arr, new_file_path):
 	print ("====== ok ======\n")
 
 
-def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, sentences_file_path='localfile/allhtmlcontent.txt', file_path='localfile/finalResult.txt'):
-	print "====== start write file ======"
-
-	print type(doc_topic), type(topic_word)
-	print type(vocab), len(vocab)
+def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihoods, sentences_file_path='localfile/allhtmlcontent.txt', file_path='localfile/finalResult/finalResult.txt'):
+	print "====== start write "+str(file_path)+"...  ======"
 
 	doc_word = np.dot(np.matrix(doc_topic), np.matrix(topic_word))
-
-	#doc_word = numpy.array(doc_word).reshape(-1,).tolist()
 
 	sentences = []
 	fr = open(sentences_file_path, 'rb')
@@ -179,7 +176,7 @@ def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, sentence
 	fr.close()
 
 	fw = open(file_path, 'w')
-	sentence_id = 0
+	fw.write("log_likelihoods: " + str(log_likelihoods) + "\n\n")
 	for sentence_id in range(len(doc_word)):
 		word_list = numpy.array(doc_word)[sentence_id].tolist()
 		words = {}
@@ -196,10 +193,9 @@ def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, sentence
 			fw.write(str(words[i][1]) + " ")
 		fw.write("\n\n")
 	fw.close()
-
-	print 'sentences: rows = ', len(sentences)
 	
 	print "====== ok ======"
+
 
 #todo
 def likelihood_best():
@@ -240,15 +236,21 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 if __name__ == "__main__":
 	filter_file_path = 'localfile/wordallfilterhtmlcontent.txt'
 	show_topic_word_num = 5
+
 	n_topics = 20
 	random_state = 1
 	n_iter = 500
 
-	doc_topic, topic_word, vocab = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
-	#write_local_file(doc_topic, 'localfile/doc_topic.csv')
-	#write_local_file(topic_word, 'localfile/topic_word.csv')
-	#write_doc_score_to_localfile(topic_word, vocab, 'localfile/topic_word_score.csv')
-	write_local_file(doc_topic, topic_word, vocab, show_topic_word_num,
-					 file_path="localfile/finalResult"+str(n_topics)+"_"+str(random_state)+"_"+str(n_iter)+"_"+str(show_topic_word_num)+".txt" )
+	for n_topics in range(5, 200, 5):
+		for random_state in range(0, 2, 1):
+			for n_iter in range(50, 1000, 10):
+				doc_topic, topic_word, vocab, log_likelihoods = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
+
+				#record some thing
+				#write_local_file(doc_topic, 'localfile/doc_topic.csv')
+				#write_local_file(topic_word, 'localfile/topic_word.csv')
+				#write_doc_score_to_localfile(topic_word, vocab, 'localfile/topic_word_score.csv')
+				write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihoods,
+								 file_path="localfile/finalResult/finalResult"+str(n_topics)+"_"+str(random_state)+"_"+str(n_iter)+"_"+str(show_topic_word_num)+".txt" )
 
 	print 'finish...'
