@@ -26,6 +26,8 @@
     python lda-based-tfidf.py (argv[] in main)<br>
     filter_file_path：同2中的file4(required)<br>
     show_topic_word_num：console中的展示结果，每个topic的word数目<br>
-    n_topics random_state n_iter分别是lda参数<br>
+    n_topics random_state n_iter 分别是lda参数<br>
+
+    ps:files in localfile/finalResult/ are 'UTF-8'
 
     eg:python lda_tfidf.py <br>

@@ -1,6 +1,5 @@
 #coding=utf-8
 
-import numpy, types
 import lda
 import lda.datasets
 import codecs
@@ -102,7 +101,7 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 	X, temp_vocab = get_array(filter_file_path)
 	X, temp_vocab = filter_x_name(X, temp_vocab, 5)
 
-	X = numpy.array(X)
+	X = np.array(X)
 	model = lda.LDA(n_topics=n_topics, random_state=random_state, n_iter=n_iter)
 	model.fit(X)
 
@@ -113,10 +112,10 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 	topic_word = model.topic_word_
 	topic_word_score = []
 	for i, topic_dist in enumerate(topic_word):
-		topic_words = numpy.array(vocab)[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
-		topic_words_score = topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
+		topic_words = np.array(vocab)[np.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
+		topic_words_score = topic_dist[np.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
 		#print ('topic {0}:{1}'.format(i, u' '.join(topic_words).encode('utf-8')))
-		#print ('topic score:'+str(topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]))
+		#print ('topic score:'+str(topic_dist[np.argsort(topic_dist)][:-(show_topic_word_num+1):-1]))
 	'''
 	print "===== mode.doc_topic_ ====="
 	print len(model.doc_topic_), len(model.doc_topic_[0])
@@ -128,7 +127,7 @@ def lda_solve(filter_file_path, show_topic_word_num = 1, n_topics=20, random_sta
 	print "============"
 	'''
 	print ("ok...\n")
-	return model.doc_topic_, model.topic_word_, vocab, model.loglikelihoods_
+	return model.doc_topic_, model.topic_word_, vocab, model.loglikelihoods_[-1]
 
 
 '''
@@ -162,7 +161,7 @@ def write_local_file(arr, new_file_path):
 	print ("====== ok ======\n")
 
 
-def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihoods, sentences_file_path='localfile/allhtmlcontent.txt', file_path='localfile/finalResult/finalResult.txt'):
+def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihood, sentences_file_path='localfile/allhtmlcontent.txt', file_path='localfile/finalResult/finalResult.txt'):
 	print "====== start write "+str(file_path)+"...  ======"
 
 	doc_word = np.dot(np.matrix(doc_topic), np.matrix(topic_word))
@@ -176,9 +175,9 @@ def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_like
 	fr.close()
 
 	fw = open(file_path, 'w')
-	fw.write("log_likelihoods: " + str(log_likelihoods) + "\n\n")
+	fw.write("log_likelihood:" + str(log_likelihood) + "\n\n")
 	for sentence_id in range(len(doc_word)):
-		word_list = numpy.array(doc_word)[sentence_id].tolist()
+		word_list = np.array(doc_word)[sentence_id].tolist()
 		words = {}
 		for i in range(len(word_list)):
 			words[i] = word_list[i]
@@ -197,11 +196,6 @@ def write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_like
 	print "====== ok ======"
 
 
-#todo
-def likelihood_best():
-	pass
-
-
 '''
 '''
 def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
@@ -209,8 +203,8 @@ def write_doc_score_to_localfile(topic_word, vocab, new_file_path):
 	fopenw = open(new_file_path, 'wb')
 	show_topic_word_num = 10
 	for i, topic_dist in enumerate(topic_word):
-		topic_words = numpy.array(vocab)[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
-		topic_words_score = topic_dist[numpy.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
+		topic_words = np.array(vocab)[np.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
+		topic_words_score = topic_dist[np.argsort(topic_dist)][:-(show_topic_word_num+1):-1]
 		flag = 0
 		for w in topic_words:
 			if flag == 0:
@@ -237,20 +231,15 @@ if __name__ == "__main__":
 	filter_file_path = 'localfile/wordallfilterhtmlcontent.txt'
 	show_topic_word_num = 5
 
-	n_topics = 20
-	random_state = 1
-	n_iter = 500
-
-	for n_topics in range(5, 200, 5):
-		for random_state in range(0, 2, 1):
-			for n_iter in range(50, 1000, 10):
-				doc_topic, topic_word, vocab, log_likelihoods = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
-
-				#record some thing
-				#write_local_file(doc_topic, 'localfile/doc_topic.csv')
-				#write_local_file(topic_word, 'localfile/topic_word.csv')
-				#write_doc_score_to_localfile(topic_word, vocab, 'localfile/topic_word_score.csv')
-				write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihoods,
-								 file_path="localfile/finalResult/finalResult"+str(n_topics)+"_"+str(random_state)+"_"+str(n_iter)+"_"+str(show_topic_word_num)+".txt" )
+	for random_state in range(0, 2, 1):
+		for n_topics in range(20, 305, 10):
+			n_iter = 1000
+			doc_topic, topic_word, vocab, log_likelihood = lda_solve(filter_file_path, show_topic_word_num=show_topic_word_num, n_topics=n_topics, random_state=random_state, n_iter=n_iter)
+			#record some thing
+			#write_local_file(doc_topic, 'localfile/doc_topic.csv')
+			#write_local_file(topic_word, 'localfile/topic_word.csv')
+			#write_doc_score_to_localfile(topic_word, vocab, 'localfile/topic_word_score.csv')
+			write_local_file(doc_topic, topic_word, vocab, show_topic_word_num, log_likelihood,
+							 file_path="localfile/finalResult/"+str(n_topics)+"_"+str(random_state)+"_"+str(n_iter)+"_"+str(show_topic_word_num)+".txt" )
 
 	print 'finish...'
