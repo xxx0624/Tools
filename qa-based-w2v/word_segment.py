@@ -1,6 +1,5 @@
 #coding=utf-8
 
-import os, sys
 import jieba, time
 import jieba.analyse
 
@@ -20,11 +19,23 @@ def check_file_name(filename):
 
 
 def judge_word_allnumoralpa(word):
+	flag = True
 	for i in range(len(word)):
 		if (word[i] >= '0' and word[i] <= '9') or (word[i] >= 'a' and word[i] <= 'z') or (word[i] >= 'A' and word[i] <= 'Z'):
-			return True
+			pass
 		else:
-			return False
+			flag = False
+	return flag
+
+
+def judge_word_all_punctuation(word):
+	flag = True
+	for i in range(len(word)):
+		if word[i] == '.' or word[i] == '?' or word[i] == ',' or word[i] == '？' or word[i] == '。' or word[i] == '，':
+			pass
+		else:
+			flag = False
+	return flag
 
 
 def word_segment(old_file_path, new_file_path, user_dict_path, stopword_dict_path):
@@ -42,7 +53,6 @@ def word_segment(old_file_path, new_file_path, user_dict_path, stopword_dict_pat
 		line = fopenr.readline()
 		line = line.decode('utf-8', 'ignore')
 		line = line.strip()
-		print(line_no)
 		line_no += 1
 		seg_list = jieba.cut(line, cut_all = False)
 		cnt = 0
@@ -59,8 +69,8 @@ def word_segment(old_file_path, new_file_path, user_dict_path, stopword_dict_pat
 					line_word = line_word + " "+seg
 				#print str(cnt)+":",(seg.strip())
 				cnt += 1
-		print ("all size:"+str(cnt))
-		print ("special size:"+str(cnt_special))
+		print "[", line_no, "] size:", cnt
+		#print ("special size:"+str(cnt_special))
 		#write the word segment into new file
 		line_word = line_word.encode('utf-8')
 		fopenw.write(line_word)
@@ -82,6 +92,7 @@ def filter_word(file_path, filter_file_path, new_file_path):
 	fopenr.close()
 
 	#start filter file
+	cnt_filter = 0
 	fopenr = open(file_path, 'rb')
 	fopenw = open(new_file_path, 'w')
 	for line in open(file_path, 'rb'):
@@ -91,9 +102,12 @@ def filter_word(file_path, filter_file_path, new_file_path):
 		new_line = ""
 		for line_word in line_word_list:
 			line_word = line_word.strip()
-			if line_word in filter_dict or len(line_word) <= 1 or judge_word_allnumoralpa(line_word) == True:
-				#nothing
-				line_word = line_word
+			if line_word in filter_dict or len(line_word) <= 1:
+				cnt_filter += 1
+				pass
+			#elif judge_word_allnumoralpa(line_word) == True:
+			#	cnt_filter += 1
+			#	pass
 			else:
 				if new_line == "":
 					new_line = line_word
@@ -101,6 +115,7 @@ def filter_word(file_path, filter_file_path, new_file_path):
 					new_line = new_line + " " + line_word
 		fopenw.write(new_line.encode('utf-8'))
 		fopenw.write('\n')
+	print 'all filtered words\' size = ', cnt_filter
 	fopenw.close()
 	fopenr.close()
 
@@ -114,24 +129,7 @@ if __name__ == '__main__':
 	file5 = 'localfile/mydict.dic'
 	file6 = 'localfile/stopword.dic'
 
-	if len(sys.argv) >= 2:
-		file1 = sys.argv[1]
-		if len(sys.argv) >= 3:
-			file2 = sys.argv[2]
-			if len(sys.argv) >= 4:
-				file3 = sys.argv[3]
-			if len(sys.argv) >= 5:
-				file4 = sys.argv[4]
-			if len(sys.argv) >= 6:
-				file5 = sys.argv[5]
-			if len(sys.argv) >= 7:
-				file6 = sys.argv[6]
-			if -1 == word_segment(file1, file2, file5, file6):
-				pass
-			else:
-				filter_word(file2, file3, file4)
-		else:
-			print '[ERROR] check the file1 & file2...'
-	else:
-		print '[ERROR] check the file1 & file2...'
+	word_segment(file1, file2, file5, file6)
+	filter_word(file2, file3, file4)
+
 	print 'finish...'
