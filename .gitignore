@@ -1,3 +1,5 @@
 *.pyc
 .idea/
 *.iml
+*5.txt
+*.csv
