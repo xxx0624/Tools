@@ -104,7 +104,7 @@ def filter_word(file_path, filter_file_path, new_file_path):
 			line_word = line_word.strip()
 			if line_word in filter_dict or len(line_word) <= 1:
 				cnt_filter += 1
-				pass
+				#pass
 			#elif judge_word_allnumoralpa(line_word) == True:
 			#	cnt_filter += 1
 			#	pass
